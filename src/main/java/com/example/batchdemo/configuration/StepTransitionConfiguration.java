@@ -1,5 +1,6 @@
 package com.example.batchdemo.configuration;
 
+import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
@@ -41,6 +42,7 @@ public class StepTransitionConfiguration {
                 .get("Step 2")
                 .tasklet((contribution, chunkContext) -> {
                     System.out.println(">> This is step 2");
+                    contribution.setExitStatus(ExitStatus.FAILED);
                     return RepeatStatus.FINISHED;
                 }).build();
     }
@@ -60,8 +62,10 @@ public class StepTransitionConfiguration {
         return jobBuilderFactory.get("transistionJobNext_" + Instant.now().toEpochMilli())
                 .incrementer(new RunIdIncrementer())
                 .start(transitionStep1())
-                .next(transitionStep2())
-                .next(transitionStep3())
+                .on("COMPLETED").to(transitionStep2())
+                .from(transitionStep2()).on("FAILED").end()
+                .from(transitionStep2()).on("COMPLETED").to(transitionStep3())
+                .from(transitionStep3()).end()
                 .build();
     }
 }
