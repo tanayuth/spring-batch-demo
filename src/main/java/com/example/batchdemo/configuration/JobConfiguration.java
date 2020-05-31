@@ -30,6 +30,7 @@ public class JobConfiguration {
                     System.out.println("Hello world!!!");
                     return RepeatStatus.FINISHED;
                 })
+                .allowStartIfComplete(true)
                 .build();
     }
 
